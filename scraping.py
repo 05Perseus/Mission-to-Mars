@@ -14,11 +14,16 @@ def scrape_all():
 
     news_title, news_p = mars_news(browser)
 
-    data = {'news title': news_title,
+    
+
+
+    data = {'news_title': news_title,
             'news_p':news_p,
             'featured_image':featured_image(browser),
             'facts':mars_facts(),
-            'last_modified':dt.datetime.now()}
+            'last_modified':dt.datetime.now(),
+            'hemispheres':hemispheres(browser)
+            }
 
 
 
@@ -90,6 +95,40 @@ def mars_facts():
 
 
     return df.to_html(classes="table table-striped")
+
+def hemispheres(browser):
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+
+    html = browser.html
+    home_soup = soup(html, 'html.parser')
+
+    hemisphere_image_urls = []
+    results = home_soup.find_all('div',class_='description')
+
+    for result in results:
+
+        img_url = result.find('a',class_='itemLink product-item').get('href')
+
+        full_image_url = f'{url}{img_url}'
+            
+        browser.visit(full_image_url)
+
+        html = browser.html
+        full_image_soup = soup(html, 'html.parser')
+
+        url_piece_div = full_image_soup.find('div',class_='downloads')
+        url_piece = url_piece_div.find('a').get('href')
+
+        full_jpeg_url = f'{url}{url_piece}'
+
+        title = full_image_soup.find('h2',class_='title').text
+
+        image_dict = {'img_url':full_jpeg_url,'title':title}
+
+        hemisphere_image_urls.append(image_dict)
+
+    return hemisphere_image_urls
 
 if __name__ == "__main__":
     # If running as script, print scraped data
